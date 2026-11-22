@@ -25,6 +25,8 @@ public class Api {
     public static final String GAME_TEXDB_PATH = GAME_CACHE_PATH + "texdb/";
     public static final String GAME_DATA_VERSION = "1.0.0";
     public static final String GAME_DATA_MARKER = GAME_CACHE_PATH + ".blackcity-data-installed";
+    public static final String INSTALL_PREFS = "blackcity_launcher_state";
+    public static final String INSTALL_COMPLETE_KEY = "game_data_install_complete";
 
     public static final String FTEAM_FILE = GAME_CACHE_PATH + "fteam.txt";
     public static final String VERSION_FILE = GAME_CACHE_PATH + "version.txt";

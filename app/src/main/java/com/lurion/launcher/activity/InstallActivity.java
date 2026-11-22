@@ -309,6 +309,7 @@ public class InstallActivity extends AppCompatActivity {
                 // Algumas versões da data não possuem a pasta "downloand";
                 // validar pelo arquivo real do jogo, que é o critério confiável.
                 File extractedGameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
+                if (!extractedGameFile.isFile()) extractedGameFile = findGameFile(outputDir, "gta3.img");
                 if (!extractedGameFile.isFile() || extractedGameFile.length() <= 600_000_000L) {
                     throw new Exception("Os arquivos da data não foram extraídos corretamente");
                 }
@@ -318,6 +319,8 @@ public class InstallActivity extends AppCompatActivity {
                 createFteamFile(outputPath);
                 createVersionFile(outputPath);
                 createInstallMarker();
+                getSharedPreferences(Api.INSTALL_PREFS, MODE_PRIVATE).edit()
+                        .putBoolean(Api.INSTALL_COMPLETE_KEY, true).apply();
                 if (zipFile.exists() && !zipFile.delete()) {
                     android.util.Log.w("InstallActivity", "Não foi possível remover o cache.zip após a extração");
                 }
@@ -426,6 +429,20 @@ public class InstallActivity extends AppCompatActivity {
         return normalized;
     }
 
+    private File findGameFile(File root, String wantedName) {
+        if (root == null || !root.isDirectory()) return new File(root, wantedName);
+        File[] children = root.listFiles();
+        if (children == null) return new File(root, wantedName);
+        for (File child : children) {
+            if (child.isFile() && child.getName().equalsIgnoreCase(wantedName)) return child;
+            if (child.isDirectory()) {
+                File found = findGameFile(child, wantedName);
+                if (found.isFile()) return found;
+            }
+        }
+        return new File(root, wantedName);
+    }
+
     private void enforceNativeGameServerSettings(File outputDir) throws IOException {
         File settingsFile = new File(outputDir, "SAMP/settings.ini");
         if (!settingsFile.exists()) {
@@ -461,10 +478,13 @@ public class InstallActivity extends AppCompatActivity {
     }
 
     private boolean isGameDataInstalled() {
+        if (getSharedPreferences(Api.INSTALL_PREFS, MODE_PRIVATE)
+                .getBoolean(Api.INSTALL_COMPLETE_KEY, false)) return true;
         File marker = new File(Api.GAME_DATA_MARKER);
         File fteam = new File(Api.FTEAM_FILE);
         File version = new File(Api.VERSION_FILE);
         File gta3 = new File(Api.GAME_TEXDB_PATH, "gta3.img");
+        if (!gta3.isFile()) gta3 = findGameFile(new File(Api.GAME_CACHE_PATH), "gta3.img");
         boolean filesReady = gta3.isFile() && gta3.length() > 600_000_000L;
         boolean knownInstall = marker.isFile() || fteam.isFile() || version.isFile();
         if (filesReady && knownInstall && !marker.isFile()) {

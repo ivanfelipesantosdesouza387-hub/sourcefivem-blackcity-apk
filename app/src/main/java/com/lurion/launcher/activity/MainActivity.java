@@ -976,10 +976,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean IsGameInstalled() {
+        boolean installComplete = getSharedPreferences(Api.INSTALL_PREFS, MODE_PRIVATE)
+                .getBoolean(Api.INSTALL_COMPLETE_KEY, false);
+        if (installComplete) return true;
         File marker = new File(Api.GAME_DATA_MARKER);
         File fteamFile = new File(Api.FTEAM_FILE);
         File versionFile = new File(Api.VERSION_FILE);
         File gameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
+        if (!gameFile.isFile()) gameFile = findGameFile(new File(Api.GAME_CACHE_PATH), "gta3.img");
         // gta3.img é o arquivo grande e definitivo da data. Não exigir
         // SAMP/settings.ini aqui: ele pode ser criado somente ao abrir o jogo.
         boolean filesReady = gameFile.isFile() && gameFile.length() > 600_000_000L;
@@ -993,6 +997,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return filesReady && knownInstall;
+    }
+
+    private File findGameFile(File root, String wantedName) {
+        if (root == null || !root.isDirectory()) return new File(root, wantedName);
+        File[] children = root.listFiles();
+        if (children == null) return new File(root, wantedName);
+        for (File child : children) {
+            if (child.isFile() && child.getName().equalsIgnoreCase(wantedName)) return child;
+            if (child.isDirectory()) {
+                File found = findGameFile(child, wantedName);
+                if (found.isFile()) return found;
+            }
+        }
+        return new File(root, wantedName);
     }
 
     private boolean checkFteamFile(File fteamFile) {
