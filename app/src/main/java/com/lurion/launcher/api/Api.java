@@ -1,5 +1,7 @@
 package com.nexion.launcher.api;
 
+import android.content.Context;
+
 public class Api {
     private static final String BASE_URL = "https://pride-russia-game.ru";
     private static final String DATA_TEST_URL = BASE_URL + "/data_test";
@@ -19,17 +21,17 @@ public class Api {
      * Diretório externo específico do aplicativo. Em Android 11+ ele pode ser
      * gravado sem READ/WRITE/MANAGE_EXTERNAL_STORAGE.
      */
-    public static final String STORAGE_ROOT = "/storage/emulated/0/Android/data/com.nexion.online/files";
-    public static final String GAME_CACHE_PATH = STORAGE_ROOT + "/";
-    public static final String GAME_INSTALL_PATH = GAME_CACHE_PATH + "downloand/";
-    public static final String GAME_TEXDB_PATH = GAME_CACHE_PATH + "texdb/";
+    public static String STORAGE_ROOT = "/storage/emulated/0/Android/data/com.nexion.online/files";
+    public static String GAME_CACHE_PATH = STORAGE_ROOT + "/";
+    public static String GAME_INSTALL_PATH = GAME_CACHE_PATH + "downloand/";
+    public static String GAME_TEXDB_PATH = GAME_CACHE_PATH + "texdb/";
     public static final String GAME_DATA_VERSION = "1.0.0";
-    public static final String GAME_DATA_MARKER = GAME_CACHE_PATH + ".blackcity-data-installed";
+    public static String GAME_DATA_MARKER = GAME_CACHE_PATH + ".blackcity-data-installed";
     public static final String INSTALL_PREFS = "blackcity_launcher_state";
     public static final String INSTALL_COMPLETE_KEY = "game_data_install_complete";
 
-    public static final String FTEAM_FILE = GAME_CACHE_PATH + "fteam.txt";
-    public static final String VERSION_FILE = GAME_CACHE_PATH + "version.txt";
+    public static String FTEAM_FILE = GAME_CACHE_PATH + "fteam.txt";
+    public static String VERSION_FILE = GAME_CACHE_PATH + "version.txt";
 
     public static final String TELEGRAM_URL = "https://t.me/priderussiacrmp";
     public static final String VK_URL = "https://vk.com/priderussiacrmp";
@@ -42,6 +44,19 @@ public class Api {
 
     public static String getUpdateUrl(String version) {
         return BASE_URL + "/data/update.zip";
+    }
+
+    public static synchronized void configureStorage(Context context) {
+        if (context == null) return;
+        java.io.File external = context.getExternalFilesDir(null);
+        if (external == null) return;
+        STORAGE_ROOT = external.getAbsolutePath();
+        GAME_CACHE_PATH = STORAGE_ROOT + "/";
+        GAME_INSTALL_PATH = GAME_CACHE_PATH + "downloand/";
+        GAME_TEXDB_PATH = GAME_CACHE_PATH + "texdb/";
+        GAME_DATA_MARKER = GAME_CACHE_PATH + ".blackcity-data-installed";
+        FTEAM_FILE = GAME_CACHE_PATH + "fteam.txt";
+        VERSION_FILE = GAME_CACHE_PATH + "version.txt";
     }
 
     public static boolean isStorageAvailable() {
