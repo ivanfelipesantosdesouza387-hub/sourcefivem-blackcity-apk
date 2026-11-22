@@ -264,8 +264,7 @@ public class InstallActivity extends AppCompatActivity {
                     protected void error(BaseDownloadTask task, Throwable e) {
                         isDownloadInProgress = false;
                         safeShowToast("Ocorreu um erro. Inicie a instalação novamente");
-                        updateNotification("Erro", "Erro no download", 0, 100, false);
-                        returnToMainActivity();
+                        updateNotification("Erro", "Erro no download. Tenta novamente nesta tela.", 0, 100, false);
                     }
 
                     @Override
@@ -280,8 +279,7 @@ public class InstallActivity extends AppCompatActivity {
                             verifyDownloadedArchive(new File(task.getPath()));
                         } catch (Exception e) {
                             safeShowToast("Data inválida ou incompleta: " + e.getMessage());
-                            updateNotification("Erro", "Arquivo inválido", 0, 100, false);
-                            returnToMainActivity();
+                            updateNotification("Erro", "Arquivo inválido. Tenta novamente nesta tela.", 0, 100, false);
                             return;
                         }
                         updateInstallProgress("Atualizando arquivos", "preparando arquivos", 0, 0, 0);
@@ -337,8 +335,7 @@ public class InstallActivity extends AppCompatActivity {
             } catch (Exception e) {
                 mainHandler.post(() -> {
                     safeShowToast("Erro na extração: " + e.getMessage());
-                    updateNotification("Erro", "Erro na extração", 0, 100, false);
-                    returnToMainActivity();
+                    updateNotification("Erro", "Erro na extração. Tenta novamente nesta tela.", 0, 100, false);
                 });
             }
         }, "NexionCacheExtraction").start();
