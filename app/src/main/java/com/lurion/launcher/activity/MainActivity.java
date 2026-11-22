@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Api.configureStorage(this);
         setTheme(R.style.Theme_AppCompat_Light_NoActionBar_FullScreen);
         setContentView(R.layout.activity_main);
 
