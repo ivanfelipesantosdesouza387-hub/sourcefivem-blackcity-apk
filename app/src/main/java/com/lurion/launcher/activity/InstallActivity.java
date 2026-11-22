@@ -186,7 +186,7 @@ public class InstallActivity extends AppCompatActivity {
 
     private void updateExtractionProgress(String fileName, int progress,
                                           long extractedBytes, long totalBytes) {
-        updateInstallProgress("Atualizando arquivos", fileName, progress,
+        updateInstallProgress("Extraindo arquivos", fileName, progress,
                 extractedBytes, totalBytes);
     }
 
@@ -210,7 +210,23 @@ public class InstallActivity extends AppCompatActivity {
         }
 
         String url = Api.GAME_CACHE_ZIP;
-        updateInstallProgress("Atualizando arquivos", "cache.zip", 0, 0, 0);
+        File existingArchive = new File(folder, "cache.zip");
+        if (isGameDataInstalled()) {
+            updateInstallProgress("Data já instalada", "concluído", 100, 1, 1);
+            afterDownload();
+            return;
+        }
+        if (existingArchive.isFile() && existingArchive.length() == Api.GAME_CACHE_ZIP_SIZE) {
+            try {
+                verifyDownloadedArchive(existingArchive);
+                updateInstallProgress("Retomando instalação", "cache.zip completo", 100, existingArchive.length(), existingArchive.length());
+                UnZipCache();
+                return;
+            } catch (Exception ignored) {
+                existingArchive.delete();
+            }
+        }
+        updateInstallProgress("Baixando data", "cache.zip", 0, existingArchive.length(), Api.GAME_CACHE_ZIP_SIZE);
         createDownloadTask(url, folder.getPath()).start();
 
         updateNotification("Baixando jogo", "Iniciando download...", 0, 100, true);
@@ -296,8 +312,10 @@ public class InstallActivity extends AppCompatActivity {
                 }
 
                 enforceGameServerSettings(outputDir);
+                enforceNativeGameServerSettings(outputDir);
                 createFteamFile(outputPath);
                 createVersionFile(outputPath);
+                createInstallMarker();
                 if (zipFile.exists() && !zipFile.delete()) {
                     android.util.Log.w("InstallActivity", "Não foi possível remover o cache.zip após a extração");
                 }
@@ -406,6 +424,47 @@ public class InstallActivity extends AppCompatActivity {
         return normalized;
     }
 
+    private void enforceNativeGameServerSettings(File outputDir) throws IOException {
+        File settingsFile = new File(outputDir, "SAMP/settings.ini");
+        if (!settingsFile.exists()) {
+            File parent = settingsFile.getParentFile();
+            if (parent != null) parent.mkdirs();
+            settingsFile.createNewFile();
+        }
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        try (java.util.Scanner scanner = new java.util.Scanner(settingsFile, "UTF-8")) {
+            while (scanner.hasNextLine()) lines.add(scanner.nextLine());
+        }
+        java.util.List<String> updated = new java.util.ArrayList<>();
+        boolean inClient=false, host=false, port=false;
+        for (String line: lines) {
+            String t=line.trim();
+            if (t.startsWith("[") && t.endsWith("]")) {
+                if (inClient) { if (!host) updated.add("host = " + Api.GAME_SERVER_HOST); if (!port) updated.add("port = " + Api.GAME_SERVER_PORT); }
+                inClient=t.equalsIgnoreCase("[client]"); host=false; port=false; updated.add(line); continue;
+            }
+            if (inClient && (t.startsWith("host=") || t.startsWith("host ="))) { updated.add("host = " + Api.GAME_SERVER_HOST); host=true; }
+            else if (inClient && (t.startsWith("port=") || t.startsWith("port ="))) { updated.add("port = " + Api.GAME_SERVER_PORT); port=true; }
+            else updated.add(line);
+        }
+        if (inClient) { if (!host) updated.add("host = " + Api.GAME_SERVER_HOST); if (!port) updated.add("port = " + Api.GAME_SERVER_PORT); }
+        if (!inClient) { updated.add("[client]"); updated.add("host = " + Api.GAME_SERVER_HOST); updated.add("port = " + Api.GAME_SERVER_PORT); }
+        try (java.io.FileWriter writer = new java.io.FileWriter(settingsFile, false)) { for (String line: updated) writer.write(line + System.lineSeparator()); }
+    }
+
+    private void createInstallMarker() throws IOException {
+        try (java.io.FileWriter writer = new java.io.FileWriter(new File(Api.GAME_DATA_MARKER), false)) {
+            writer.write(Api.GAME_DATA_VERSION + "\n" + Api.GAME_CACHE_ZIP_SHA256 + "\n");
+        }
+    }
+
+    private boolean isGameDataInstalled() {
+        File marker = new File(Api.GAME_DATA_MARKER);
+        File gta3 = new File(Api.GAME_TEXDB_PATH, "gta3.img");
+        File settings = new File(Api.GAME_CACHE_PATH, "SAMP/settings.ini");
+        return marker.isFile() && gta3.isFile() && gta3.length() > 600_000_000L && settings.isFile();
+    }
+
     private void enforceGameServerSettings(File outputDir) throws IOException {
         File settingsFile = new File(outputDir, "data/settings.ini");
         if (!settingsFile.isFile()) return;
@@ -487,7 +546,7 @@ public class InstallActivity extends AppCompatActivity {
         try {
             File versionFile = new File(outputPath, "version.txt");
             java.io.FileWriter writer = new java.io.FileWriter(versionFile);
-            writer.write("1.0.0");
+            writer.write(Api.GAME_DATA_VERSION);
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();

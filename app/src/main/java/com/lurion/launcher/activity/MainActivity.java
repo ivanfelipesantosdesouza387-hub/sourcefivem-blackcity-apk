@@ -780,12 +780,19 @@ public class MainActivity extends AppCompatActivity {
     private void enforceGameServerSettings() {
         try {
             File dataSettingsFile = new File(Api.GAME_CACHE_PATH, "data/settings.ini");
+            File nativeSettingsFile = new File(Api.GAME_CACHE_PATH, "SAMP/settings.ini");
             writeIniValue(dataSettingsFile, "client", "host", Api.GAME_SERVER_HOST);
             writeIniValue(dataSettingsFile, "client", "port", Api.GAME_SERVER_PORT);
+            writeIniValue(nativeSettingsFile, "client", "host", Api.GAME_SERVER_HOST);
+            writeIniValue(nativeSettingsFile, "client", "port", Api.GAME_SERVER_PORT);
             serverPort = Api.GAME_SERVER_PORT;
         } catch (Exception e) {
             Log.w("MainActivity", "Não foi possível atualizar o servidor padrão", e);
         }
+    }
+
+    private void enforceNativeGameServerSettings() {
+        enforceGameServerSettings();
     }
 
     private void loadServerSelection() {
@@ -891,8 +898,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         saveServerSelection();
-
-        checkForUpdatesBeforePlay();
+        enforceNativeGameServerSettings();
+        // Não bloquear o botão JOGAR aguardando o endpoint antigo de atualização.
+        // A atualização do launcher é verificada separadamente na tela inicial.
+        startGame();
     }
 
     private void checkForUpdatesBeforePlay() {
@@ -967,9 +976,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean IsGameInstalled() {
+        File marker = new File(Api.GAME_DATA_MARKER);
         File fteamFile = new File(Api.FTEAM_FILE);
         File gameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
-        return checkFteamFile(fteamFile) && gameFile.isFile() && gameFile.length() > 1_000_000L;
+        File nativeSettings = new File(Api.GAME_CACHE_PATH, "SAMP/settings.ini");
+        boolean filesReady = gameFile.isFile() && gameFile.length() > 600_000_000L;
+        return filesReady && (marker.isFile() || checkFteamFile(fteamFile)) && nativeSettings.isFile();
     }
 
     private boolean checkFteamFile(File fteamFile) {
