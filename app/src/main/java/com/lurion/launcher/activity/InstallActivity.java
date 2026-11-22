@@ -60,6 +60,7 @@ public class InstallActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Api.configureStorage(this);
         mainHandler = new Handler(Looper.getMainLooper());
 
         createNotificationChannel();
@@ -197,15 +198,17 @@ public class InstallActivity extends AppCompatActivity {
         isDownloadInProgress = true;
 
         if (!Api.isStorageAvailable()) {
-            safeShowToast("Armazenamento externo indisponível");
-            returnToMainActivity();
+            isDownloadInProgress = false;
+            updateInstallProgress("Armazenamento indisponível", "Verifica o espaço e tenta novamente", 0, 0, 0);
+            safeShowToast("Não foi possível aceder ao armazenamento do jogo.");
             return;
         }
 
         folder = new File(Api.GAME_CACHE_PATH);
         if (!folder.exists() && !folder.mkdirs()) {
-            safeShowToast("Não foi possível criar a pasta de download");
-            returnToMainActivity();
+            isDownloadInProgress = false;
+            updateInstallProgress("Não foi possível preparar o armazenamento", "Tenta novamente", 0, 0, 0);
+            safeShowToast("Não foi possível criar a pasta da data.");
             return;
         }
 
