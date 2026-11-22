@@ -978,10 +978,21 @@ public class MainActivity extends AppCompatActivity {
     private boolean IsGameInstalled() {
         File marker = new File(Api.GAME_DATA_MARKER);
         File fteamFile = new File(Api.FTEAM_FILE);
+        File versionFile = new File(Api.VERSION_FILE);
         File gameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
-        File nativeSettings = new File(Api.GAME_CACHE_PATH, "SAMP/settings.ini");
+        // gta3.img é o arquivo grande e definitivo da data. Não exigir
+        // SAMP/settings.ini aqui: ele pode ser criado somente ao abrir o jogo.
         boolean filesReady = gameFile.isFile() && gameFile.length() > 600_000_000L;
-        return filesReady && (marker.isFile() || checkFteamFile(fteamFile)) && nativeSettings.isFile();
+        boolean knownInstall = marker.isFile() || checkFteamFile(fteamFile)
+                || (versionFile.isFile() && versionFile.length() > 0);
+        if (filesReady && knownInstall && !marker.isFile()) {
+            try (java.io.FileWriter writer = new java.io.FileWriter(marker, false)) {
+                writer.write(Api.GAME_DATA_VERSION + "\n");
+            } catch (Exception ignored) {
+                // A presença dos arquivos continua sendo suficiente para iniciar.
+            }
+        }
+        return filesReady && knownInstall;
     }
 
     private boolean checkFteamFile(File fteamFile) {

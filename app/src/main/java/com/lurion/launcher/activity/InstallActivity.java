@@ -306,9 +306,11 @@ public class InstallActivity extends AppCompatActivity {
 
                 long extractedTotalBytes = extractZipWithProgress(zipFile, outputDir);
 
-                File extractedDir = new File(Api.GAME_INSTALL_PATH);
-                if (!extractedDir.exists() || !extractedDir.isDirectory()) {
-                    throw new Exception("Os arquivos não foram extraídos corretamente");
+                // Algumas versões da data não possuem a pasta "downloand";
+                // validar pelo arquivo real do jogo, que é o critério confiável.
+                File extractedGameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
+                if (!extractedGameFile.isFile() || extractedGameFile.length() <= 600_000_000L) {
+                    throw new Exception("Os arquivos da data não foram extraídos corretamente");
                 }
 
                 enforceGameServerSettings(outputDir);
@@ -460,9 +462,17 @@ public class InstallActivity extends AppCompatActivity {
 
     private boolean isGameDataInstalled() {
         File marker = new File(Api.GAME_DATA_MARKER);
+        File fteam = new File(Api.FTEAM_FILE);
+        File version = new File(Api.VERSION_FILE);
         File gta3 = new File(Api.GAME_TEXDB_PATH, "gta3.img");
-        File settings = new File(Api.GAME_CACHE_PATH, "SAMP/settings.ini");
-        return marker.isFile() && gta3.isFile() && gta3.length() > 600_000_000L && settings.isFile();
+        boolean filesReady = gta3.isFile() && gta3.length() > 600_000_000L;
+        boolean knownInstall = marker.isFile() || fteam.isFile() || version.isFile();
+        if (filesReady && knownInstall && !marker.isFile()) {
+            try (java.io.FileWriter writer = new java.io.FileWriter(marker, false)) {
+                writer.write(Api.GAME_DATA_VERSION + "\n");
+            } catch (Exception ignored) { }
+        }
+        return filesReady && knownInstall;
     }
 
     private void enforceGameServerSettings(File outputDir) throws IOException {
