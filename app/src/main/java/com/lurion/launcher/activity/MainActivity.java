@@ -39,6 +39,7 @@ import com.nexion.launcher.util.SampQueryAPI;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -902,6 +903,11 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // A data v5 contém WEAPON.dat em maiúsculas, mas o hook Android
+        // abre SAMP/weapon.dat. O armazenamento Android é case-sensitive;
+        // criar apenas a cópia compatível evita crash sem apagar a data.
+        ensureNativeDataCompatibility();
+
         String nickText = Preferences.getNick();
         if (!checkValidNick(nickText)) {
             return;
@@ -912,6 +918,29 @@ public class MainActivity extends AppCompatActivity {
         // Não bloquear o botão JOGAR aguardando o endpoint antigo de atualização.
         // A atualização do launcher é verificada separadamente na tela inicial.
         startGame();
+    }
+
+    private void ensureNativeDataCompatibility() {
+        File sampDir = new File(Api.GAME_CACHE_PATH, "SAMP");
+        File expected = new File(sampDir, "weapon.dat");
+        if (expected.isFile() && expected.length() > 0) return;
+
+        File packaged = new File(sampDir, "WEAPON.dat");
+        if (!packaged.isFile() || packaged.length() <= 0) {
+            Log.w("MainActivity", "SAMP/weapon.dat ausente e não foi encontrada cópia WEAPON.dat");
+            return;
+        }
+
+        try (InputStream input = new FileInputStream(packaged);
+             FileOutputStream output = new FileOutputStream(expected)) {
+            byte[] buffer = new byte[64 * 1024];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            output.flush();
+            Log.i("MainActivity", "Criada compatibilidade SAMP/weapon.dat (" + expected.length() + " bytes)");
+        } catch (IOException e) {
+            Log.e("MainActivity", "Falha ao criar SAMP/weapon.dat", e);
+        }
     }
 
     private void checkForUpdatesBeforePlay() {

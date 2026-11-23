@@ -318,6 +318,7 @@ public class InstallActivity extends AppCompatActivity {
                     throw new Exception("Os arquivos da data não foram extraídos corretamente");
                 }
 
+                ensureNativeDataCompatibility(outputDir);
                 enforceGameServerSettings(outputDir);
                 enforceNativeGameServerSettings(outputDir);
                 createFteamFile(outputPath);
@@ -342,6 +343,25 @@ public class InstallActivity extends AppCompatActivity {
                 });
             }
         }, "NexionCacheExtraction").start();
+    }
+
+    private void ensureNativeDataCompatibility(File outputDir) throws IOException {
+        File sampDir = new File(outputDir, "SAMP");
+        File expected = new File(sampDir, "weapon.dat");
+        if (expected.isFile() && expected.length() > 0) return;
+
+        File packaged = new File(sampDir, "WEAPON.dat");
+        if (!packaged.isFile() || packaged.length() <= 0) {
+            throw new IOException("SAMP/weapon.dat não encontrado na data");
+        }
+
+        try (InputStream input = new BufferedInputStream(new FileInputStream(packaged));
+             OutputStream output = new BufferedOutputStream(new FileOutputStream(expected))) {
+            byte[] buffer = new byte[64 * 1024];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            output.flush();
+        }
     }
 
     private void clearPreviousGameFiles(File outputDir, File zipFile) throws IOException {

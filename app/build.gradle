@@ -24,8 +24,8 @@ android {
         minSdk 26
         targetSdk 34
         // Deve ser igual ao campo version do launcher_update.json.
-        versionCode 115
-        versionName "build_1.1.0"
+        versionCode 116
+        versionName "build_1.1.1"
 
         multiDexEnabled true
 
