@@ -987,7 +987,7 @@ public class MainActivity extends AppCompatActivity {
         if (!gameFile.isFile()) gameFile = findGameFile(new File(Api.GAME_CACHE_PATH), "gta3.img");
         // gta3.img é o arquivo grande e definitivo da data. Não exigir
         // SAMP/settings.ini aqui: ele pode ser criado somente ao abrir o jogo.
-        boolean filesReady = gameFile.isFile() && gameFile.length() > 600_000_000L;
+        boolean filesReady = gameFile.isFile() && gameFile.length() > 100_000_000L;
         boolean knownInstall = marker.isFile() || checkFteamFile(fteamFile)
                 || (versionFile.isFile() && versionFile.length() > 0);
         if (filesReady && knownInstall && !marker.isFile()) {

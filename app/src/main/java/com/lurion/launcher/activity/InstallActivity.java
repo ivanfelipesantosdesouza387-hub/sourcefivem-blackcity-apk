@@ -311,7 +311,7 @@ public class InstallActivity extends AppCompatActivity {
                 // validar pelo arquivo real do jogo, que é o critério confiável.
                 File extractedGameFile = new File(Api.GAME_TEXDB_PATH, "gta3.img");
                 if (!extractedGameFile.isFile()) extractedGameFile = findGameFile(outputDir, "gta3.img");
-                if (!extractedGameFile.isFile() || extractedGameFile.length() <= 600_000_000L) {
+                if (!extractedGameFile.isFile() || extractedGameFile.length() <= 100_000_000L) {
                     throw new Exception("Os arquivos da data não foram extraídos corretamente");
                 }
 
@@ -485,7 +485,7 @@ public class InstallActivity extends AppCompatActivity {
         File version = new File(Api.VERSION_FILE);
         File gta3 = new File(Api.GAME_TEXDB_PATH, "gta3.img");
         if (!gta3.isFile()) gta3 = findGameFile(new File(Api.GAME_CACHE_PATH), "gta3.img");
-        boolean filesReady = gta3.isFile() && gta3.length() > 600_000_000L;
+        boolean filesReady = gta3.isFile() && gta3.length() > 100_000_000L;
         boolean knownInstall = marker.isFile() || fteam.isFile() || version.isFile();
         if (filesReady && knownInstall && !marker.isFile()) {
             try (java.io.FileWriter writer = new java.io.FileWriter(marker, false)) {
