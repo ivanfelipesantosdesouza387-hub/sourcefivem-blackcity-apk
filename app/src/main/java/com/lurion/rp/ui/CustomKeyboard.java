@@ -9,6 +9,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -52,27 +53,34 @@ public class CustomKeyboard {
 
         mInputHistory = new ArrayList<String>();
 
-        // EditText — captura o input do teclado Android
+        // Campo visível de chat; o texto continua a ser enviado ao C++ no Enter.
         mInputEt = new EditText(mContext);
-        mInputEt.setBackgroundColor(Color.TRANSPARENT);
-        mInputEt.setTextColor(Color.TRANSPARENT);
-        mInputEt.setTextSize(1);
+        mInputEt.setBackgroundColor(Color.rgb(240, 238, 242));
+        mInputEt.setTextColor(Color.rgb(41, 38, 49));
+        mInputEt.setHintTextColor(Color.rgb(110, 105, 115));
+        mInputEt.setTextSize(16);
         mInputEt.setSingleLine(true);
-        mInputEt.setCursorVisible(false);
+        mInputEt.setCursorVisible(true);
         mInputEt.setImeOptions(EditorInfo.IME_ACTION_DONE | EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        mInputEt.setHint("");
-        mInputEt.setAlpha(0.0f);
+        mInputEt.setHint("Sua mensagem...");
 
-        // Container posicionado no canto inferior (mesmo que invisível)
+        // Barra inferior de chat.
         mInputLayout = new LinearLayout(mContext);
         mInputLayout.setOrientation(LinearLayout.HORIZONTAL);
-        mInputLayout.setBackgroundColor(Color.TRANSPARENT);
+        mInputLayout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        mInputLayout.setPadding(6, 6, 6, 6);
+        mInputLayout.setBackgroundColor(Color.rgb(35, 33, 42));
         mInputLayout.setVisibility(View.GONE);
 
-        LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(1, 1);
+        LinearLayout.LayoutParams etParams = new LinearLayout.LayoutParams(0, 49, 1.0f);
         mInputLayout.addView(mInputEt, etParams);
 
-        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(1, 1);
+        addCommandButton("/me");
+        addCommandButton("/try");
+        addCommandButton("/do");
+
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         frameParams.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.START;
         mContext.addContentView(mInputLayout, frameParams);
 
@@ -122,6 +130,24 @@ public class CustomKeyboard {
         });
 
         HideInputLayout();
+    }
+
+    private void addCommandButton(String command) {
+        Button button = new Button(mContext);
+        button.setText(command);
+        button.setTextSize(12);
+        button.setTextColor(Color.WHITE);
+        button.setAllCaps(false);
+        button.setPadding(2, 0, 2, 0);
+        button.setBackgroundColor(Color.rgb(57, 54, 66));
+        button.setOnClickListener(v -> {
+            mInputEt.setText(command + " ");
+            mInputEt.setSelection(mInputEt.length());
+            mInputEt.requestFocus();
+            InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showSoftInput(mInputEt, InputMethodManager.SHOW_IMPLICIT);
+        });
+        mInputLayout.addView(button, new LinearLayout.LayoutParams(58, 49));
     }
 
     public void onHeightChanged(int height)
