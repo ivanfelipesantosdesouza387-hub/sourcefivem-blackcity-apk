@@ -994,7 +994,8 @@ public class MainActivity extends AppCompatActivity {
             SampQueryAPI query = new SampQueryAPI(Api.GAME_SERVER_HOST,
                     Integer.parseInt(Api.GAME_SERVER_PORT));
             String[] info = query.mo7164b();
-            if (info != null && info.length > 0) online = "1".equals(info[0]);
+            // info[0] is the password-protected flag, not the online status.
+            if (info != null && info.length >= 6) online = true;
             applyServerStatus(online ? "online" : "offline");
         }).start();
     }

@@ -65,36 +65,32 @@ public final class SampQueryAPI {
 
     /* renamed from: b */
     public final String[] mo7164b() {
-        byte[] bArr;
-        DatagramPacket datagramPacket;
         DatagramSocket datagramSocket = this.f7277a;
         String[] strArr = new String[6];
         try {
-            DatagramPacket c = mo7165c("i");
-            if (datagramSocket != null) {
-                try {
-                    datagramSocket.send(c);
-                } catch (IOException unused) {
-                }
+            if (!this.f7282f || datagramSocket == null) {
+                return null;
             }
-            if (datagramSocket == null) {
-                bArr = new byte[3072];
-            } else {
-                datagramPacket = new DatagramPacket(new byte[3072], 3072);
-                try {
-                    datagramSocket.receive(datagramPacket);
-                } catch (IOException unused2) {
-                }
-                bArr = datagramPacket.getData();
+            DatagramPacket c = mo7165c("i");
+            if (c == null) {
+                return null;
+            }
+            datagramSocket.send(c);
+            DatagramPacket response = new DatagramPacket(new byte[3072], 3072);
+            datagramSocket.receive(response);
+            if (response.getLength() < 16) {
+                return null;
+            }
+            byte[] bArr = response.getData();
+            if (bArr[0] != 'S' || bArr[1] != 'A' || bArr[2] != 'M' ||
+                    bArr[3] != 'P' || bArr[10] != 'i') {
+                return null;
             }
             ByteBuffer wrap = ByteBuffer.wrap(bArr);
             wrap.order(ByteOrder.LITTLE_ENDIAN);
             wrap.position(11);
-            if (wrap.get() == 0) {
-                strArr[0] = "0";
-            } else {
-                strArr[0] = "1";
-            }
+            // Field 11 is "password protected", not the online status.
+            strArr[0] = "1";
             strArr[1] = String.valueOf((int) wrap.getShort());
             strArr[2] = String.valueOf((int) wrap.getShort());
             strArr[3] = m5851a(wrap.getInt(), wrap);
