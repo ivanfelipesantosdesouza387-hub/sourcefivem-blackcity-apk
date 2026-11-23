@@ -291,6 +291,8 @@ void DoInitStuff()
         // Nunca usar o antigo servidor centralpvp.com:2467 como fallback.
         const char* serverHost = "51.38.205.167";
         int serverPort = 18015;
+        const char* playerName = "Player_Name";
+        const char* playerPassword = "";
         if (pSettings != nullptr) {
             if (pSettings->Get().szHost[0] != '\0') {
                 serverHost = pSettings->Get().szHost;
@@ -298,10 +300,14 @@ void DoInitStuff()
             if (pSettings->Get().iPort > 0 && pSettings->Get().iPort <= 65535) {
                 serverPort = pSettings->Get().iPort;
             }
+            if (pSettings->Get().szNickName[0] != '\0') {
+                playerName = pSettings->Get().szNickName;
+            }
+            playerPassword = pSettings->Get().szPassword;
         }
 
         pNetGame = new CNetGame(serverHost, serverPort,
-                pSettings->Get().szNickName, pSettings->Get().szPassword);
+                playerName, playerPassword);
         bNetworkInited = true;
 
         FLog("DoInitStuff end");
