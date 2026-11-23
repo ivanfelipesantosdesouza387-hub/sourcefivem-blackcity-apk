@@ -232,7 +232,17 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
         final String content = new String(bArr2);
         final String leftBtnText = new String(bArr3);
         final String rightBtnText = new String(bArr4);
-        runOnUiThread(() -> { this.mDialog.show(dialogId, dialogTypeId, caption, content, leftBtnText, rightBtnText); });
+        Log.i(TAG, "DialogBox recebido: id=" + dialogId + " tipo=" + dialogTypeId + " titulo=" + caption);
+        runOnUiThread(() -> {
+            // Um diálogo de login enviado pela GM é a prova de que a ligação
+            // terminou. Nunca o deixamos atrás do loading do jogo.
+            if (mLoadingScreen != null) mLoadingScreen.hide();
+            if (this.mDialog != null) {
+                this.mDialog.show(dialogId, dialogTypeId, caption, content, leftBtnText, rightBtnText);
+            } else {
+                Log.e(TAG, "DialogBox recebido antes de o DialogManager ser inicializado");
+            }
+        });
     }
 
     public void showEditObject()

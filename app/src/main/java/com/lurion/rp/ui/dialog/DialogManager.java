@@ -106,6 +106,10 @@ public class DialogManager {
         this.mTabSizes = new int[]{0, 0, 0, 0};
 
         mMainLayout = layout;
+        // O jogo usa uma SurfaceView/OpenGL. Sem elevar explicitamente esta
+        // camada, o mundo 3D pode ficar por cima dos diálogos enviados pela GM.
+        mMainLayout.setElevation(10000.0f);
+        mMainLayout.setTranslationZ(10000.0f);
         this.mDialogBody = layout.findViewById(R.id.dialog_body);
         this.mDialogTextLayout = layout.findViewById(R.id.dialog_text_layout);
         this.mDialogInputLayout = layout.findViewById(R.id.dialog_input_layout);
@@ -136,6 +140,11 @@ public class DialogManager {
 
     public void show(int i, int i2, String str, String str2, String str3, String str4) {
         isShow = true;
+        // Reaplica a ordem sempre que um novo RPC DialogBox chega, inclusive
+        // depois de o SurfaceView ser recriado ou voltar do loading.
+        this.mMainLayout.bringToFront();
+        this.mMainLayout.setElevation(10000.0f);
+        this.mMainLayout.setTranslationZ(10000.0f);
         this.mCurrentDialogId = i;
         this.mDialogStyle = i2;
         this.mCaption = str;
