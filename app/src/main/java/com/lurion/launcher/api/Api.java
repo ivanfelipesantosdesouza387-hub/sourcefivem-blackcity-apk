@@ -16,6 +16,8 @@ public class Api {
 
     public static final String UPDATE_JSON = DATA_TEST_URL + "/update.json";
     public static final String SERVERS_JSON = DATA_TEST_URL + "/servers.json";
+    public static final String SERVER_STATUS_URL =
+        "https://raw.githubusercontent.com/ivanfelipesantosdesouza387-hub/sourcefivem-blackcity-apk/main/server_status.json";
 
     /*
      * Diretório externo específico do aplicativo. Em Android 11+ ele pode ser

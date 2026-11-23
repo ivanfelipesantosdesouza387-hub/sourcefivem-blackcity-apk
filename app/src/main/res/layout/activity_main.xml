@@ -73,6 +73,19 @@
 
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/server_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="@font/montserrat_bold"
+        android:text="● VERIFICANDO SERVIDOR"
+        android:textColor="#FFD8A000"
+        android:textSize="11sp"
+        app:layout_constraintBottom_toTopOf="@id/button_play"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_play"
         android:layout_width="178dp"

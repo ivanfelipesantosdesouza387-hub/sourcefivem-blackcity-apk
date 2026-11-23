@@ -32,6 +32,7 @@ import com.nexion.launcher.other.Preferences;
 import com.nexion.launcher.update.LauncherUpdateChecker;
 import com.nexion.launcher.update.UpdateInfo;
 import com.nexion.launcher.util.Util;
+import com.nexion.launcher.util.SampQueryAPI;
 
 
 
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton discordButton;
     private ImageButton instagramButton;
     private ImageButton youtubeButton;
+    private TextView serverStatusView;
+    private boolean serverUnderMaintenance = false;
 
     private AppCompatButton playButton;
     private boolean isCheckingUpdate = false;
@@ -247,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
         replaceTestServerWithMoscow();
         checkAndRequestPermissions();
         initUIComponents(animation);
+        serverStatusView = findViewById(R.id.server_status);
+        checkServerStatus();
         initSocialButtons(animation);
         loadServerSelection();
         setLauncherLoadingProgress(82);
@@ -887,6 +892,10 @@ public class MainActivity extends AppCompatActivity {
         if (selectedServer == null || selectedServer.isEmpty()) {
             return;
         }
+        if (serverUnderMaintenance) {
+            safeShowToast("O servidor está em manutenção.");
+            return;
+        }
 
         if (!IsGameInstalled()) {
             ToLoad();
@@ -956,6 +965,57 @@ public class MainActivity extends AppCompatActivity {
             safeShowToast("Ошибка запуска обновления: " + e.getMessage());
             startGame();
         }
+    }
+
+    private void checkServerStatus() {
+        new Thread(() -> {
+            boolean maintenance = false;
+            try {
+                java.net.HttpURLConnection connection = (java.net.HttpURLConnection)
+                        new java.net.URL(Api.SERVER_STATUS_URL).openConnection();
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+                if (connection.getResponseCode() == 200) {
+                    try (java.io.InputStream input = connection.getInputStream()) {
+                        String json = new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                        org.json.JSONObject object = new org.json.JSONObject(json);
+                        maintenance = object.optBoolean("maintenance", false);
+                    }
+                }
+                connection.disconnect();
+            } catch (Exception ignored) {
+                // Sem override remoto: a consulta UDP decide online/offline.
+            }
+            if (maintenance) {
+                applyServerStatus("maintenance");
+                return;
+            }
+            boolean online = false;
+            SampQueryAPI query = new SampQueryAPI(Api.GAME_SERVER_HOST,
+                    Integer.parseInt(Api.GAME_SERVER_PORT));
+            String[] info = query.mo7164b();
+            if (info != null && info.length > 0) online = "1".equals(info[0]);
+            applyServerStatus(online ? "online" : "offline");
+        }).start();
+    }
+
+    private void applyServerStatus(String status) {
+        runOnUiThread(() -> {
+            if (serverStatusView == null) return;
+            if ("maintenance".equals(status)) {
+                serverUnderMaintenance = true;
+                serverStatusView.setText("● EM MANUTENÇÃO");
+                serverStatusView.setTextColor(android.graphics.Color.rgb(255, 193, 7));
+            } else if ("online".equals(status)) {
+                serverUnderMaintenance = false;
+                serverStatusView.setText("● ONLINE");
+                serverStatusView.setTextColor(android.graphics.Color.rgb(76, 175, 80));
+            } else {
+                serverUnderMaintenance = false;
+                serverStatusView.setText("● OFFLINE");
+                serverStatusView.setTextColor(android.graphics.Color.rgb(244, 67, 54));
+            }
+        });
     }
 
     private void startGame() {
