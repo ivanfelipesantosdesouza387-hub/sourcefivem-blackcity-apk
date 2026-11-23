@@ -287,9 +287,21 @@ void DoInitStuff()
             pJavaWrapper->OnNetworkReady();
         }
 
-        //ReadSettingFile();
+        // O launcher grava este endereço em SAMP/settings.ini antes de abrir o jogo.
+        // Nunca usar o antigo servidor centralpvp.com:2467 como fallback.
+        const char* serverHost = "51.38.205.167";
+        int serverPort = 18015;
+        if (pSettings != nullptr) {
+            if (pSettings->Get().szHost[0] != '\0') {
+                serverHost = pSettings->Get().szHost;
+            }
+            if (pSettings->Get().iPort > 0 && pSettings->Get().iPort <= 65535) {
+                serverPort = pSettings->Get().iPort;
+            }
+        }
 
-        pNetGame = new CNetGame("jogar.centralpvp.com", 2467, pSettings->Get().szNickName, pSettings->Get().szPassword);
+        pNetGame = new CNetGame(serverHost, serverPort,
+                pSettings->Get().szNickName, pSettings->Get().szPassword);
         bNetworkInited = true;
 
         FLog("DoInitStuff end");
