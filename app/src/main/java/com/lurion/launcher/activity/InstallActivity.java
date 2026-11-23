@@ -305,6 +305,9 @@ public class InstallActivity extends AppCompatActivity {
                     throw new Exception("Não foi possível criar o diretório de destino: " + outputPath);
                 }
 
+                // O ZIP já foi validado por tamanho e SHA-256. Limpar os
+                // ficheiros antigos evita misturar a data anterior com a nova.
+                clearPreviousGameFiles(outputDir, zipFile);
                 long extractedTotalBytes = extractZipWithProgress(zipFile, outputDir);
 
                 // Algumas versões da data não possuem a pasta "downloand";
@@ -339,6 +342,23 @@ public class InstallActivity extends AppCompatActivity {
                 });
             }
         }, "NexionCacheExtraction").start();
+    }
+
+    private void clearPreviousGameFiles(File outputDir, File zipFile) throws IOException {
+        File[] children = outputDir.listFiles();
+        if (children == null) return;
+        for (File child : children) {
+            if (child.getCanonicalFile().equals(zipFile.getCanonicalFile())) continue;
+            deleteRecursively(child);
+        }
+    }
+
+    private void deleteRecursively(File file) throws IOException {
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) for (File child : children) deleteRecursively(child);
+        }
+        if (file.exists() && !file.delete()) throw new IOException("Não foi possível remover: " + file);
     }
 
     private long extractZipWithProgress(File zipFile, File outputDir) throws Exception {

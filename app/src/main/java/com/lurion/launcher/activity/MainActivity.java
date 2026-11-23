@@ -1040,7 +1040,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean IsGameInstalled() {
         boolean installComplete = getSharedPreferences(Api.INSTALL_PREFS, MODE_PRIVATE)
                 .getBoolean(Api.INSTALL_COMPLETE_KEY, false);
-        if (installComplete) return true;
+        // Uma actualização da data deve invalidar a instalação anterior,
+        // mesmo que o SharedPreferences ainda diga que ela foi concluída.
+        if (installComplete && isDataVersionCurrent()) return true;
         File marker = new File(Api.GAME_DATA_MARKER);
         File fteamFile = new File(Api.FTEAM_FILE);
         File versionFile = new File(Api.VERSION_FILE);
@@ -1059,6 +1061,17 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return filesReady && knownInstall;
+    }
+
+    private boolean isDataVersionCurrent() {
+        File[] candidates = {new File(Api.VERSION_FILE), new File(Api.GAME_DATA_MARKER)};
+        for (File candidate : candidates) {
+            if (!candidate.isFile()) continue;
+            try (Scanner scanner = new Scanner(candidate, "UTF-8")) {
+                if (scanner.hasNextLine() && Api.GAME_DATA_VERSION.equals(scanner.nextLine().trim())) return true;
+            } catch (Exception ignored) { }
+        }
+        return false;
     }
 
     private File findGameFile(File root, String wantedName) {
